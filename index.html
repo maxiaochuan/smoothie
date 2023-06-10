@@ -10,25 +10,99 @@
     padding: 0;
   }
   .container {
-    background: gray;
+    padding: 12px;
+    background: blue;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  .container canvas {
-    background-color: aqua;
+  .container.row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
+  /* .container canvas {
+    background-color: aqua;
+  } */
 </style>
 <body>
 
   <div class="container">
-    <canvas id="canvas" width="300" height="200"></canvas>
+    <canvas id="canvas" style="width: 100%; height: 200px;"></canvas>
+  </div>
+  <div class="container">
+    <canvas id="canvas2" style="width: 100%; height: 400px;"></canvas>
+  </div>
+  <div class="container row">
+    <button id="start2">start2</button>
+    <button id="stop2">stop2</button>
+    <button id="startdata">startdata</button>
+    <button id="stopdata">stopdata</button>
   </div>
 
   <script type="module">
-    import { SmoothieChart } from './src';
-    const smoothie = new SmoothieChart({ frameRate: 1 });
-    smoothie.streamTo(document.getElementById('canvas'))
+    import { SmoothieChart, TimeSeries } from './src';
+
+    // setTimeout(() => {
+    //   // smoothie.remove(random);
+    //   clearTimeout(i);
+    // }, 10000);
+
+    const run = (id) => {
+      const smoothie = new SmoothieChart({
+        frameRate: 120,
+        grid: {
+          verticalSections: 2,
+        }
+      });
+      smoothie.streamTo(document.getElementById(id), 1000)
+      return smoothie;
+    }
+
+    // const s1 = run('canvas');
+    const s2 = run('canvas2');
+
+    let instance;
+    let i;
+
+    const start = () => {
+      // if (random) {
+      //   s1.remove(random);
+      //   s2.remove(random);
+      // }
+      const makeTimeSeries =() => {
+        const random = new TimeSeries({ responsive: true });
+        i = setInterval(function() {
+          random.append(Date.now(), Math.random() * 10000);
+        }, 500);
+        return { random, stop: () => clearInterval(i) };
+      }
+      instance = makeTimeSeries();
+      // s1.add(random, { strokeStyle: 'rgba(255, 0, 0, 1)'});
+      s2.add(instance.random, { strokeStyle: 'rgba(0, 255, 0, 1)'});
+    }
+
+    const stop = () => {
+      if (instance) {
+        instance.stop();
+      }
+    };
+
+
+    document.getElementById('start2').addEventListener('click', () => {
+      s2.start();
+    })
+    document.getElementById('stop2').addEventListener('click', () => {
+      s2.stop();
+    })
+    document.getElementById('startdata').addEventListener('click', () => {
+      start()
+    })
+    document.getElementById('stopdata').addEventListener('click', () => {
+      stop()
+    })
+    // Randomly add a data point every 500ms
 
   </script>
 </body>

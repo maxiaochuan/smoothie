@@ -280,8 +280,7 @@
     this.minValue = isNaN(this.minValue) ? value : Math.min(this.minValue, value);
   };
 
-  TimeSeries.prototype.dropOldData = function(oldestValidTime, maxDataSetLength) {
-    // We must always keep one expired data point as we need this to draw the
+  TimeSeries.prototype.dropOldData = function(oldestValidTime, maxDataSetLength) { // We must always keep one expired data point as we need this to draw the
     // line that comes into the chart from the left, but any points prior to that can be removed.
     var removeCount = 0;
     while (this.data.length - removeCount >= maxDataSetLength && this.data[removeCount + 1][0] < oldestValidTime) {
@@ -831,6 +830,11 @@
       this.isAnimatingScale = Math.abs(valueRangeDiff) > 0.1 || Math.abs(minValueDiff) > 0.1;
       this.currentValueRange += chartOptions.scaleSmoothing * valueRangeDiff;
       this.currentVisMinValue += chartOptions.scaleSmoothing * minValueDiff;
+      // console.log('minmax', chartMinValue, chartMaxValue)
+      // console.log('isAnimatingScale', this.isAnimatingScale)
+      // console.log('currentVisMinValue', this.currentVisMinValue)
+      // console.log('currentVisMinValue', this.currentVisMinValue)
+      // console.log('isAnimatingScale', this.isAnimatingScale)
     }
 
     this.valueRange = { min: chartMinValue, max: chartMaxValue };
