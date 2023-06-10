@@ -5,8 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+<style>
+  body {
+    padding: 0;
+  }
+  .container {
+    background: gray;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .container canvas {
+    background-color: aqua;
+  }
+</style>
 <body>
 
-  <script type="module" src="./src/index.ts"></script>
+  <div class="container">
+    <canvas id="canvas" width="300" height="200"></canvas>
+  </div>
+
+  <script type="module">
+    import { SmoothieChart } from './src';
+
+    const smoothie = new SmoothieChart();
+
+    console.log('SmoothieChart', smoothie);
+  </script>
 </body>
 </html>

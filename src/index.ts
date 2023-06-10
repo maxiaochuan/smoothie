@@ -1,1 +1,1 @@
-console.log('smoothie')
+export { default as SmoothieChart } from './SmoothieChart';
