@@ -1,192 +1,31 @@
 import Util from './Util';
 import TimeSeries, { TimeSeriesOptions, TimeSeriesExtraOptions } from './TimeSeries';
-
-export interface SmoothieChartOptions {
-  /**
-   * @description 图表是否自适应画布大小
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {boolean}
-   * @default {true}
-   * @memberof SmoothieChartOptions
-   */
-  responsive: boolean;
-
-  /**
-   * @description 设置最大帧数, 为0则不限制, FPS
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @memberof SmoothieChartOptions
-   */
-  frameRate: number;
-
-  /**
-   * @description 总绘制时间，毫秒
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @default {20_000}
-   * @memberof SmoothieChartOptions
-   */
-  duration: number;
-
-  /**
-   * @description allows proportional padding to be added above the chart. for 10% padding, specify 1.1.
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @default {1}
-   * @memberof SmoothieChartOptions
-   */
-  maxValueScale: number;
-  /**
-   * @description allows proportional padding to be added below the chart. for 10% padding, specify 1.1.
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @default {1}
-   * @memberof SmoothieChartOptions
-   */
-  minValueScale: number;
-
-  /**
-   * @description 可存在最大数据数量，可超出坐标
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @default {2}
-   * @memberof SmoothieChartOptions
-   */
-  maxDataSetLength: number;
-
-  max?: number;
-  min?: number;
-
-  /**
-   * @description controls the rate at which y-value zoom animation occurs
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {number}
-   * @default {0.125}
-   * @memberof SmoothieChartOptions
-   */
-  scaleSmoothing: number;
-
-  /**
-   * @description 以那种方式绘制线条
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {'bezier' | 'linear' | 'line' | 'step'}
-   * @default {'bezier'}
-   * @memberof SmoothieChartOptions
-   */
-  interpolation: 'bezier' | 'linear' | 'line' | 'step';
-
-  /**
-   * @description
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-11
-   * @type {boolean}
-   * @default {false}
-   * @memberof SmoothieChartOptions
-   */
-  nonRealtimeData: boolean;
-  displayDataFromPercentile: number;
-
-  /**
-   * @description Label 样式
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {{
-   *       fillStyle: string;
-   *       disabled: boolean;
-   *       fontSize: number;
-   *       fontFamily: string,
-   *       precision: number,
-   *       showIntermediateLabels: boolean,
-   *       intermediateLabelSameAxis: boolean,
-   *     }}
-   * @memberof SmoothieChartOptions
-   */
-  labels: {
-    fillStyle: string;
-    disabled: boolean;
-    fontSize: number;
-    fontFamily: string;
-    precision: number;
-    showIntermediateLabels: boolean;
-    intermediateLabelSameAxis: boolean;
-  };
-  /**
-   * @description Grid 样式
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {{
-   *       fillStyle: string;
-   *       strokeStyle: string;
-   *       lineWidth: number;
-   *       millisPerLine: number;
-   *       verticalSections: number;
-   *       borderVisible: boolean;
-   *     }}
-   * @memberof SmoothieChartOptions
-   */
-  grid: {
-    fillStyle: string;
-    strokeStyle: string;
-    lineWidth: number;
-    millisPerLine: number;
-    verticalSections: number;
-    border: boolean;
-  };
-
-  /**
-   * @description 是否反向滚动
-   * @author Xiaochuan Ma <mxcins@gmail.com>
-   * @date 2023-06-10
-   * @type {boolean}
-   * @default {false}
-   * @memberof SmoothieChartOptions
-   */
-  reverse: boolean;
-}
-
-const defaults: SmoothieChartOptions = {
-  responsive: true,
-  frameRate: 0,
-  duration: 20_000,
-  maxValueScale: 1,
-  minValueScale: 1,
-  maxDataSetLength: 2,
-  scaleSmoothing: 0.125,
-  reverse: false,
-  interpolation: 'bezier',
-  nonRealtimeData: false,
-  displayDataFromPercentile: 1,
-  labels: {
-    fillStyle: '#ffffff',
-    disabled: false,
-    fontSize: 10,
-    fontFamily: 'monospace',
-    precision: 2,
-    showIntermediateLabels: false,
-    intermediateLabelSameAxis: true,
-  },
-  grid: {
-    fillStyle: '#000000',
-    strokeStyle: '#777777',
-    lineWidth: 2,
-    millisPerLine: 1000,
-    verticalSections: 2,
-    border: true,
-  },
-};
+import { SmoothieChartOptions, DEFAULT_OPTIONS } from './_const';
 
 export default class SmoothieChart {
   private options: SmoothieChartOptions;
 
-  private canvas?: HTMLCanvasElement;
+  private _canvas?: HTMLCanvasElement;
+
+  private get canvas() {
+    if (!this._canvas) {
+      throw new Error('canvas is not init');
+    }
+    return this._canvas;
+  }
+
+  private set canvas(v: HTMLCanvasElement) {
+    this._canvas = v;
+  }
+
+  private get context() {
+    if (!this._canvas) {
+      throw new Error('canvas is not init');
+    }
+    return this._canvas.getContext('2d')!;
+  }
+
+  private frameId: number = 0;
 
   private clientWidth: number = 0;
 
@@ -203,8 +42,6 @@ export default class SmoothieChart {
    * @memberof SmoothieChart
    */
   private offset: number = 0;
-
-  private frame: number = 0;
 
   /**
    * @description 每帧时间，毫秒
@@ -232,7 +69,7 @@ export default class SmoothieChart {
    * @type {number}
    * @memberof SmoothieChart
    */
-  private lastChartTimestamp: number;
+  private lastChartTime: number;
 
   /**
    * @description 每像素有多少毫秒
@@ -244,6 +81,16 @@ export default class SmoothieChart {
    */
   private millisPerPixel: number = 0;
 
+  /**
+   * @description 纵向Grid Line 占用多少时间,毫秒
+   * @author Xiaochuan Ma <mxcins@gmail.com>
+   * @date 2023-06-10
+   * @private
+   * @type {number}
+   * @memberof SmoothieChart
+   */
+  private millisPerLine: number = 0;
+
   private series: Set<TimeSeries> = new Set();
 
   private value: { min: number; max: number; range: number } = {
@@ -252,12 +99,11 @@ export default class SmoothieChart {
     range: Number.NaN,
   };
 
-  private state: { range: number; min: number } = {
+  private state: { range: number; min: number; isAnimatingScale: boolean } = {
+    isAnimatingScale: false,
     range: 1,
     min: 0,
   };
-
-  private isAnimatingScale: boolean = false;
 
   private cache: { lastWidth: number; lastHeight: number } = {
     lastWidth: 0,
@@ -266,19 +112,19 @@ export default class SmoothieChart {
 
   constructor(options: Partial<SmoothieChartOptions> = {}) {
     this.options = {
-      ...defaults,
+      ...DEFAULT_OPTIONS,
       ...options,
       labels: {
-        ...defaults.labels,
+        ...DEFAULT_OPTIONS.labels,
         ...options.labels,
       },
       grid: {
-        ...defaults.grid,
+        ...DEFAULT_OPTIONS.grid,
         ...options.grid,
       },
     };
-    if (this.options.frameRate) {
-      this.frameTime = 1000 / this.options.frameRate;
+    if (this.options.limitFPS) {
+      this.frameTime = 1000 / this.options.limitFPS;
     }
   }
 
@@ -320,15 +166,15 @@ export default class SmoothieChart {
   }
 
   public start() {
-    if (this.frame) return;
+    if (this.frameId) return;
     const animate = () => {
-      this.frame = requestAnimationFrame(() => {
+      this.frameId = requestAnimationFrame(() => {
         if(this.options.nonRealtimeData){
-           const dateZero = new Date(0).valueOf();
+           const dateZero = 0;
            // find the data point with the latest timestamp
            var maxTimeStamp = [...this.series].reduce((max, series) => {
              const dataSet = series.data;
-             var indexToCheck = Math.round(this.options.displayDataFromPercentile * dataSet.length) - 1;
+             var indexToCheck = Math.round(dataSet.length) - 1;
              indexToCheck = indexToCheck >= 0 ? indexToCheck : 0;
              indexToCheck = indexToCheck <= dataSet.length -1 ? indexToCheck : dataSet.length -1;
              if(dataSet && dataSet.length > 0)
@@ -339,14 +185,12 @@ export default class SmoothieChart {
              }
              return max;
           }, dateZero);
-          console.log('datezero', dateZero);
           if (maxTimeStamp !== 0 && this.offset === 0) {
             this.offset = Date.now() - maxTimeStamp;
-            console.log('inner offset', this.offset);
           }
           // use the max timestamp as current time
           // this.render(maxTimeStamp > dateZero ? maxTimeStamp : null);
-          console.log(maxTimeStamp, this.offset, Date.now() - this.offset);
+          // TODO: offset delay
           this.render(Date.now() - this.offset - 500)
         } else {
         this.render();
@@ -359,53 +203,52 @@ export default class SmoothieChart {
   }
 
   public stop() {
-    if (this.frame) {
+    if (this.frameId) {
+      window.cancelAnimationFrame(this.frameId);
+      this.frameId = 0;
       this.offset = 0;
-      window.cancelAnimationFrame(this.frame);
-      this.frame = 0;
     }
   }
 
-  private render(init?: number | null) {
+  private render(timestamp?: number | null) {
     const now = Date.now();
     // 帧率限制
-    if (this.frameTime > 0 && now - this.lastRenderTime < this.frameTime) return;
+    if (this.options.limitFPS > 0 && now - this.lastRenderTime < this.frameTime) return;
 
-    let time = (init || now) - this.delay;
+    let time = (timestamp || now) - this.delay;
+    // 时间平滑
     time -= time % this.millisPerPixel;
-    if (!this.isAnimatingScale) {
-      // We're not animating. We can use the last render time and the scroll speed to work out whether
-      // we actually need to paint anything yet. If not, we can return immediately.
-      var sameTime = this.lastChartTimestamp === time;
-      if (sameTime) {
-        // Render at least every 1/6th of a second. The canvas may be resized, which there is
-        // no reliable way to detect.
-        var needToRenderInCaseCanvasResized = now - this.lastRenderTime > 1000/6;
-        if (!needToRenderInCaseCanvasResized) {
-          return;
-        }
-      }
-    }
+
+    // if (!this.isAnimatingScale) {
+    //   // We're not animating. We can use the last render time and the scroll speed to work out whether
+    //   // we actually need to paint anything yet. If not, we can return immediately.
+    //   var sameTime = this.lastChartTimestamp === time;
+    //   if (sameTime) {
+    //     // Render at least every 1/6th of a second. The canvas may be resized, which there is
+    //     // no reliable way to detect.
+    //     var needToRenderInCaseCanvasResized = now - this.lastRenderTime > 1000/6;
+    //     if (!needToRenderInCaseCanvasResized) {
+    //       console.log('return');
+    //       return;
+    //     }
+    //   }
+    // }
 
     this.lastRenderTime = now;
-    this.lastChartTimestamp = time;
+    this.lastChartTime = time;
 
     this.resize();
 
     if (!this.canvas) return;
 
-    const context = this.canvas.getContext('2d');
-
-    if (!context) return;
-
+    // 绘图范围
     const dimensions = { top: 0, left: 0, width: this.clientWidth, height: this.clientHeight };
+
+    // 最早有效时间
     const oldestValidTime = time - dimensions.width * this.millisPerPixel;
 
     const v2y = (v: number, lineWidth: number) => {
       const offset = v - this.state.min;
-      // const unsnapped = this.currentValueRange === 0
-      //       ? dimensions.height
-      //       : dimensions.height * (1 - offset / this.currentValueRange);
       const y = dimensions.height * (1 - offset / this.state.range);
       return Util.pixelSnap(y, lineWidth);
     };
@@ -428,6 +271,8 @@ export default class SmoothieChart {
     };
 
     this.update();
+
+    const context = this.context;
 
     context.font = this.options.labels.fontSize + 'px ' + this.options.labels.fontFamily;
 
@@ -458,14 +303,11 @@ export default class SmoothieChart {
     context.save();
     context.lineWidth = grid.lineWidth;
     context.strokeStyle = grid.strokeStyle;
+
     // Vertical (time) dividers.
-    if (grid.millisPerLine > 0) {
+    if (this.millisPerLine > 0) {
       context.beginPath();
-      for (
-        var t = time - (time % grid.millisPerLine);
-        t >= oldestValidTime;
-        t -= grid.millisPerLine
-      ) {
+      for (var t = time - (time % this.millisPerLine); t >= oldestValidTime; t -= this.millisPerLine) {
         var gx = t2x(t, grid.lineWidth);
         context.moveTo(gx, 0);
         context.lineTo(gx, dimensions.height);
@@ -487,7 +329,7 @@ export default class SmoothieChart {
     }
     context.restore();
 
-    // // Draw any horizontal lines...
+    // //TODO: Draw any horizontal lines...
     // if (chartOptions.horizontalLines && chartOptions.horizontalLines.length) {
     //   for (var hl = 0; hl < chartOptions.horizontalLines.length; hl++) {
     //     var line = chartOptions.horizontalLines[hl],
@@ -501,6 +343,7 @@ export default class SmoothieChart {
     //     context.stroke();
     //   }
     // }
+
     // For each data set...
     this.series.forEach(series => {
       const dataset = series.data;
@@ -521,7 +364,7 @@ export default class SmoothieChart {
       let lastY = firstY;
 
       context.moveTo(firstX, firstY);
-      const draw = this.getDrawLineFn(context, series);
+      const draw = this.getDrawLineFn(series);
 
       dataset.forEach(([t, v]) => {
         const x = t2x(t, lineWidthMaybeZero);
@@ -553,10 +396,8 @@ export default class SmoothieChart {
     });
   }
 
-  private getDrawLineFn(
-    context: CanvasRenderingContext2D,
-    series: TimeSeries,
-  ): (x: number, y: number, lx: number, ly: number) => void {
+  private getDrawLineFn(series: TimeSeries): (x: number, y: number, lx: number, ly: number) => void {
+    const context = this.context;
     switch (series.options.interpolation || this.options.interpolation) {
       case 'line':
       case 'linear': {
@@ -624,7 +465,8 @@ export default class SmoothieChart {
       const range = max - min;
       const rangeDiff = range - this.state.range;
       var minDiff = min - this.state.min;
-      this.isAnimatingScale = Math.abs(rangeDiff) > 0.1 || Math.abs(minDiff) > 0.1;
+
+      this.state.isAnimatingScale = Math.abs(rangeDiff) > 0.1 || Math.abs(minDiff) > 0.1;
       this.state.range += this.options.scaleSmoothing * rangeDiff;
       this.state.min += this.options.scaleSmoothing * minDiff;
     }
@@ -654,5 +496,6 @@ export default class SmoothieChart {
     this.clientWidth = width;
     this.clientHeight = height;
     this.millisPerPixel = this.options.duration / this.clientWidth;
+    this.millisPerLine = this.options.duration / this.options.grid.horizontalSections;
   }
 }

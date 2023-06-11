@@ -1,4 +1,4 @@
-import type { SmoothieChartOptions } from './SmoothieChart';
+import type { SmoothieChartOptions } from './_const';
 
 export interface TimeSeriesOptions {
   resetBoundsInterval: number;
@@ -14,14 +14,14 @@ export interface TimeSeriesExtraOptions {
 }
 
 export default class TimeSeries {
-  public options: Readonly<TimeSeriesOptions & Required<TimeSeriesExtraOptions>> = {
+  public options: Readonly<TimeSeriesOptions & TimeSeriesExtraOptions & { lineWidth: number; strokeStyle: string }> = {
     resetBounds: true,
     resetBoundsInterval: 3000,
     lineWidth: 2,
     strokeStyle: 'none',
-    interpolation: 'bezier',
-    fillStyle: '',
-    fillToBottom: false,
+    // interpolation: 'bezier',
+    // fillStyle: '',
+    // fillToBottom: false,
   };
 
   public resetBoundsTimerId: number = 0;

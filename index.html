@@ -62,6 +62,7 @@
 
     const run = (id) => {
       const smoothie = new SmoothieChart({
+        interpolation: 'step',
         nonRealtimeData: true,
         // frameRate: 2,
         grid: {
@@ -80,7 +81,7 @@
     let i = 0;
 
     const random = new TimeSeries();
-    s2.add(random, { strokeStyle: 'rgba(0, 255, 0, 1)'});
+    s2.add(random, { interpolation: 'step', strokeStyle: 'rgba(0, 255, 0, 1)'});
 
     const start = () => {
       intervarId = setInterval(() => {
