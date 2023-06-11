@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
 </head>
 <style>
   body {
@@ -27,7 +28,6 @@
   } */
 </style>
 <body>
-
   <div class="container">
     <canvas id="canvas" style="width: 100%; height: 200px;"></canvas>
   </div>
@@ -44,14 +44,26 @@
   <script type="module">
     import { SmoothieChart, TimeSeries } from './src';
 
-    // setTimeout(() => {
-    //   // smoothie.remove(random);
-    //   clearTimeout(i);
-    // }, 10000);
+    const now = Date.now();
+    const dayjsnow = dayjs('1990-01-01 01:00:00').valueOf();
+    console.log('Date.now()', now);
+    console.log('dayjs().valueOf()', dayjsnow);
+    const offset = now - dayjsnow;
+    console.log('offset', offset);
+
+    const d = dayjs('1990-01-01 01:00:00');
+
+    const data = Array.from({ length: 1000 }).map((_, i) => {
+      return {
+        x: d.clone().add(i * 500, 'ms').valueOf(),
+        y: Math.random() * 10000,
+      }
+    })
 
     const run = (id) => {
       const smoothie = new SmoothieChart({
-        frameRate: 120,
+        nonRealtimeData: true,
+        // frameRate: 2,
         grid: {
           verticalSections: 2,
         }
@@ -64,29 +76,24 @@
     const s2 = run('canvas2');
 
     let instance;
-    let i;
+    let intervarId
+    let i = 0;
+
+    const random = new TimeSeries();
+    s2.add(random, { strokeStyle: 'rgba(0, 255, 0, 1)'});
 
     const start = () => {
-      // if (random) {
-      //   s1.remove(random);
-      //   s2.remove(random);
-      // }
-      const makeTimeSeries =() => {
-        const random = new TimeSeries({ responsive: true });
-        i = setInterval(function() {
-          random.append(Date.now(), Math.random() * 10000);
-        }, 500);
-        return { random, stop: () => clearInterval(i) };
-      }
-      instance = makeTimeSeries();
-      // s1.add(random, { strokeStyle: 'rgba(255, 0, 0, 1)'});
-      s2.add(instance.random, { strokeStyle: 'rgba(0, 255, 0, 1)'});
+      intervarId = setInterval(() => {
+        random.append(data[i].x, data[i].y);
+        console.log('interval', random);
+        i += 1;
+      }, 500);
+      s2.start();
     }
 
     const stop = () => {
-      if (instance) {
-        instance.stop();
-      }
+      clearInterval(intervarId);
+      s2.stop();
     };
 
 

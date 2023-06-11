@@ -84,6 +84,17 @@ export interface SmoothieChartOptions {
   interpolation: 'bezier' | 'linear' | 'line' | 'step';
 
   /**
+   * @description
+   * @author Xiaochuan Ma <mxcins@gmail.com>
+   * @date 2023-06-11
+   * @type {boolean}
+   * @default {false}
+   * @memberof SmoothieChartOptions
+   */
+  nonRealtimeData: boolean;
+  displayDataFromPercentile: number;
+
+  /**
    * @description Label 样式
    * @author Xiaochuan Ma <mxcins@gmail.com>
    * @date 2023-06-10
@@ -151,6 +162,8 @@ const defaults: SmoothieChartOptions = {
   scaleSmoothing: 0.125,
   reverse: false,
   interpolation: 'bezier',
+  nonRealtimeData: false,
+  displayDataFromPercentile: 1,
   labels: {
     fillStyle: '#ffffff',
     disabled: false,
@@ -180,6 +193,16 @@ export default class SmoothieChart {
   private clientHeight: number = 0;
 
   private delay: number = 0;
+
+  /**
+   * @description 对齐数据时间点到当前时间点
+   * @author Xiaochuan Ma <mxcins@gmail.com>
+   * @date 2023-06-11
+   * @private
+   * @type {number}
+   * @memberof SmoothieChart
+   */
+  private offset: number = 0;
 
   private frame: number = 0;
 
@@ -261,10 +284,8 @@ export default class SmoothieChart {
 
   public streamTo(canvas: HTMLCanvasElement, delay: number) {
     this.canvas = canvas;
-
     this.resize();
-
-    this.delay = delay || 0;
+    // this.delay = delay || 0;
     this.start();
   }
 
@@ -302,27 +323,34 @@ export default class SmoothieChart {
     if (this.frame) return;
     const animate = () => {
       this.frame = requestAnimationFrame(() => {
-        // if(this.options.nonRealtimeData){
-        //    var dateZero = new Date(0);
-        //    // find the data point with the latest timestamp
-        //    var maxTimeStamp = this.seriesSet.reduce(function(max, series){
-        //      var dataSet = series.timeSeries.data;
-        //      var indexToCheck = Math.round(this.options.displayDataFromPercentile * dataSet.length) - 1;
-        //      indexToCheck = indexToCheck >= 0 ? indexToCheck : 0;
-        //      indexToCheck = indexToCheck <= dataSet.length -1 ? indexToCheck : dataSet.length -1;
-        //      if(dataSet && dataSet.length > 0)
-        //      {
-        //       // timestamp corresponds to element 0 of the data point
-        //       var lastDataTimeStamp = dataSet[indexToCheck][0];
-        //       max = max > lastDataTimeStamp ? max : lastDataTimeStamp;
-        //      }
-        //      return max;
-        //   }.bind(this), dateZero);
-        //   // use the max timestamp as current time
-        //   this.render(this.canvas, maxTimeStamp > dateZero ? maxTimeStamp : null);
-        // } else {
+        if(this.options.nonRealtimeData){
+           const dateZero = new Date(0).valueOf();
+           // find the data point with the latest timestamp
+           var maxTimeStamp = [...this.series].reduce((max, series) => {
+             const dataSet = series.data;
+             var indexToCheck = Math.round(this.options.displayDataFromPercentile * dataSet.length) - 1;
+             indexToCheck = indexToCheck >= 0 ? indexToCheck : 0;
+             indexToCheck = indexToCheck <= dataSet.length -1 ? indexToCheck : dataSet.length -1;
+             if(dataSet && dataSet.length > 0)
+             {
+              // timestamp corresponds to element 0 of the data point
+              var lastDataTimeStamp = dataSet[indexToCheck][0];
+              max = max > lastDataTimeStamp ? max : lastDataTimeStamp;
+             }
+             return max;
+          }, dateZero);
+          console.log('datezero', dateZero);
+          if (maxTimeStamp !== 0 && this.offset === 0) {
+            this.offset = Date.now() - maxTimeStamp;
+            console.log('inner offset', this.offset);
+          }
+          // use the max timestamp as current time
+          // this.render(maxTimeStamp > dateZero ? maxTimeStamp : null);
+          console.log(maxTimeStamp, this.offset, Date.now() - this.offset);
+          this.render(Date.now() - this.offset - 500)
+        } else {
         this.render();
-        // }
+        }
         animate();
       });
     };
@@ -332,31 +360,32 @@ export default class SmoothieChart {
 
   public stop() {
     if (this.frame) {
+      this.offset = 0;
       window.cancelAnimationFrame(this.frame);
       this.frame = 0;
     }
   }
 
-  private render() {
+  private render(init?: number | null) {
     const now = Date.now();
     // 帧率限制
     if (this.frameTime > 0 && now - this.lastRenderTime < this.frameTime) return;
 
-    let time = now - this.delay;
+    let time = (init || now) - this.delay;
     time -= time % this.millisPerPixel;
-    // if (!this.isAnimatingScale) {
-    //   // We're not animating. We can use the last render time and the scroll speed to work out whether
-    //   // we actually need to paint anything yet. If not, we can return immediately.
-    //   var sameTime = this.lastChartTimestamp === time;
-    //   if (sameTime) {
-    //     // Render at least every 1/6th of a second. The canvas may be resized, which there is
-    //     // no reliable way to detect.
-    //     var needToRenderInCaseCanvasResized = nowMillis - this.lastRenderTimeMillis > 1000/6;
-    //     if (!needToRenderInCaseCanvasResized) {
-    //       return;
-    //     }
-    //   }
-    // }
+    if (!this.isAnimatingScale) {
+      // We're not animating. We can use the last render time and the scroll speed to work out whether
+      // we actually need to paint anything yet. If not, we can return immediately.
+      var sameTime = this.lastChartTimestamp === time;
+      if (sameTime) {
+        // Render at least every 1/6th of a second. The canvas may be resized, which there is
+        // no reliable way to detect.
+        var needToRenderInCaseCanvasResized = now - this.lastRenderTime > 1000/6;
+        if (!needToRenderInCaseCanvasResized) {
+          return;
+        }
+      }
+    }
 
     this.lastRenderTime = now;
     this.lastChartTimestamp = time;

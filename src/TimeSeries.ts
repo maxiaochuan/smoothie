@@ -131,6 +131,8 @@ export default class TimeSeries {
   public removeOldData(oldestValidTime: number, maxDataSetLength: number) {
     // We must always keep one expired data point as we need this to draw the
     // line that comes into the chart from the left, but any points prior to that can be removed.
+
+
     var removeCount = 0;
     while (
       this.data.length - removeCount >= maxDataSetLength &&
